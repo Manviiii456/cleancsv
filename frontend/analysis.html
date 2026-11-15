@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Dashboard | CleanCSV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+    <h2>CleanCSV</h2>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="analysis.html">Dashboard</a>
+        <a href="history.html">History</a>
+    </div>
+</nav>
+
+<section class="dashboard">
+    <h1>Data Analysis Dashboard</h1>
+    <p>Overview of your dataset quality</p>
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>Total Rows</h3>
+            <h2>1000</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Columns</h3>
+            <h2>8</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Missing Values</h3>
+            <h2>25</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Duplicate Rows</h3>
+            <h2>12</h2>
+        </div>
+
+    </div>
+
+    <div class="issues">
+        <h2>Detected Data Issues</h2>
+
+        <table>
+            <tr>
+                <th>Column</th>
+                <th>Issue</th>
+                <th>Count</th>
+            </tr>
+
+            <tr>
+                <td>Name</td>
+                <td>Missing Values</td>
+                <td>10</td>
+            </tr>
+
+            <tr>
+                <td>Age</td>
+                <td>Invalid Values</td>
+                <td>5</td>
+            </tr>
+
+            <tr>
+                <td>Email</td>
+                <td>Missing Values</td>
+                <td>15</td>
+            </tr>
+        </table>
+
+        <a href="cleaning.html" class="btn">
+            Clean My Data
+        </a>
+    </div>
+</section>
+
+</body>
+</html>
