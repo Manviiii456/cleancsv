@@ -4,11 +4,21 @@ from pathlib import Path
 from uuid import uuid4
 from pymongo.errors import PyMongoError
 
+# File handling functions
 from backend.file_handler import (
     read_csv_file,
-    save_uploaded_file
+    save_uploaded_file,
+    get_uploaded_file
 )
 
+# Data analysis functions - Member 2
+from backend.analysis.data_analyzer import analyze_csv
+from backend.analysis.data_validator import validate_data
+from backend.analysis.missing_values import detect_missing_values
+from backend.analysis.duplicate_detector import detect_duplicates
+from backend.analysis.outlier_detector import detect_outliers
+
+# Database functions
 from backend.database import (
     add_dataset,
     get_dataset,
@@ -18,7 +28,7 @@ from backend.database import (
 router = APIRouter()
 
 
-# Health check
+# 1. Health check
 @router.get("/health")
 def health_check():
     return {
@@ -27,7 +37,7 @@ def health_check():
     }
 
 
-# Upload CSV file
+# 2. Upload CSV file
 @router.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
 
@@ -58,7 +68,7 @@ async def upload_csv(file: UploadFile = File(...)):
         # Generate unique file ID
         file_id = str(uuid4())
 
-        # Save original CSV in storage/uploads
+        # Save original CSV
         file_path = save_uploaded_file(
             file_id,
             content
@@ -95,7 +105,7 @@ async def upload_csv(file: UploadFile = File(...)):
         )
 
 
-# Get details of one uploaded CSV
+# 3. Get details of one uploaded CSV
 @router.get("/dataset/{file_id}")
 def dataset_details(file_id: str):
 
@@ -117,7 +127,7 @@ def dataset_details(file_id: str):
         )
 
 
-# View upload history
+# 4. View upload history
 @router.get("/history")
 def upload_history():
 
@@ -130,4 +140,74 @@ def upload_history():
         raise HTTPException(
             status_code=503,
             detail="Unable to retrieve upload history"
+        )
+
+
+# 5. Analyze uploaded CSV
+@router.get("/analysis/{file_id}")
+def analyze_dataset(file_id: str):
+
+    try:
+        # Check dataset in MongoDB
+        dataset = get_dataset(file_id)
+
+        if not dataset:
+            raise HTTPException(
+                status_code=404,
+                detail="Dataset not found"
+            )
+
+        # Get uploaded CSV file
+        file_path = get_uploaded_file(file_id)
+
+        # Read CSV
+        df = read_csv_file(file_path.read_bytes())
+
+        # Validate dataset
+        validation = validate_data(df)
+
+        if not validation["is_valid"]:
+            raise HTTPException(
+                status_code=400,
+                detail=validation["errors"]
+            )
+
+        # Perform basic analysis
+        analysis = analyze_csv(str(file_path))
+
+        if "error" in analysis:
+            raise HTTPException(
+                status_code=400,
+                detail=analysis["error"]
+            )
+
+        # Detect missing values
+        missing = detect_missing_values(df)
+
+        # Detect duplicate records
+        duplicates = detect_duplicates(df)
+
+        # Detect outliers
+        outliers = detect_outliers(df)
+
+        return {
+            "file_id": file_id,
+            "filename": dataset["filename"],
+            "validation": validation,
+            "analysis": analysis,
+            "missing_values": missing,
+            "duplicates": duplicates,
+            "outliers": outliers
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Uploaded CSV file not found"
+        )
+
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503,
+            detail="Database error"
         )
