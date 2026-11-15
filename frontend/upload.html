@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV | CleanCSV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav>
+    <h2>CleanCSV</h2>
+
+    <div>
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="analysis.html">Dashboard</a>
+        <a href="history.html">History</a>
+    </div>
+</nav>
+
+<section class="upload-section">
+
+    <h1>Upload Your CSV File</h1>
+
+    <p>Select a CSV dataset to begin data analysis.</p>
+
+    <div class="upload-box">
+
+        <h2>Choose Your File</h2>
+
+        <input type="file" id="csvFile" accept=".csv">
+
+        <p id="fileName">No file selected</p>
+
+        <button class="btn" onclick="uploadCSV()">
+            Upload CSV
+        </button>
+
+        <p id="message"></p>
+
+    </div>
+
+</section>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

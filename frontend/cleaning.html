@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Cleaning | CleanCSV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+    <h2>CleanCSV</h2>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="analysis.html">Dashboard</a>
+        <a href="history.html">History</a>
+    </div>
+</nav>
+
+<section class="dashboard">
+
+    <h1>Clean Your Data</h1>
+    <p>Select the operations you want to perform.</p>
+
+    <div class="issues">
+        <h2>Cleaning Options</h2>
+
+        <label class="clean-option">
+            <input type="checkbox" id="duplicates">
+            Remove Duplicate Rows
+        </label>
+
+        <label class="clean-option">
+            <input type="checkbox" id="missing">
+            Handle Missing Values
+        </label>
+
+        <label class="clean-option">
+            <input type="checkbox" id="spaces">
+            Remove Extra Spaces
+        </label>
+
+        <label class="clean-option">
+            <input type="checkbox" id="format">
+            Standardize Text Formatting
+        </label>
+
+        <label class="clean-option">
+            <input type="checkbox" id="types">
+            Convert Data Types
+        </label>
+
+        <button class="btn" onclick="previewCleaning()">
+            Preview Cleaning
+        </button>
+
+        <p id="cleanMessage"></p>
+
+    </div>
+
+    <div class="issues">
+        <h2>Before & After Preview</h2>
+        <p id="previewMessage">
+            Select cleaning operations and click Preview Cleaning.
+        </p>
+    </div>
+
+</section>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
