@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from pathlib import Path
 from uuid import uuid4
 from pymongo.errors import PyMongoError
@@ -11,21 +12,33 @@ from backend.file_handler import (
     get_uploaded_file
 )
 
-# Data analysis functions - Member 2
+# Member 2 - Data analysis
 from backend.analysis.data_analyzer import analyze_csv
 from backend.analysis.data_validator import validate_data
 from backend.analysis.missing_values import detect_missing_values
 from backend.analysis.duplicate_detector import detect_duplicates
 from backend.analysis.outlier_detector import detect_outliers
 
+# Member 3 - Data cleaning
+from backend.cleaning.cleaning_engine import (
+    clean_data,
+    save_cleaned_csv
+)
+from backend.cleaning.recommendations import generate_recommendations
+
 # Database functions
 from backend.database import (
     add_dataset,
     get_dataset,
-    get_history
+    get_history,
+    update_cleaned_file
 )
 
 router = APIRouter()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+CLEANED_DIR = BASE_DIR / "storage" / "cleaned"
+CLEANED_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # 1. Health check
@@ -37,44 +50,28 @@ def health_check():
     }
 
 
-# 2. Upload CSV file
+# 2. Upload CSV
 @router.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
 
     if not file.filename or not file.filename.lower().endswith(".csv"):
-        raise HTTPException(
-            status_code=400,
-            detail="Only CSV files are allowed"
-        )
+        raise HTTPException(400, "Only CSV files are allowed")
 
     content = await file.read()
 
     if not content:
-        raise HTTPException(
-            status_code=400,
-            detail="Uploaded file is empty"
-        )
+        raise HTTPException(400, "Uploaded file is empty")
 
     if len(content) > 10 * 1024 * 1024:
-        raise HTTPException(
-            status_code=400,
-            detail="File size must be below 10 MB"
-        )
+        raise HTTPException(400, "File size must be below 10 MB")
 
     try:
-        # Read and validate CSV
         df = read_csv_file(content)
 
-        # Generate unique file ID
         file_id = str(uuid4())
 
-        # Save original CSV
-        file_path = save_uploaded_file(
-            file_id,
-            content
-        )
+        file_path = save_uploaded_file(file_id, content)
 
-        # Save file details in MongoDB
         add_dataset(
             file_id,
             Path(file.filename).name,
@@ -93,19 +90,13 @@ async def upload_csv(file: UploadFile = File(...)):
         }
 
     except ValueError as error:
-        raise HTTPException(
-            status_code=400,
-            detail=str(error)
-        )
+        raise HTTPException(400, str(error))
 
     except PyMongoError:
-        raise HTTPException(
-            status_code=503,
-            detail="Unable to save file details in MongoDB"
-        )
+        raise HTTPException(503, "Unable to save file details in MongoDB")
 
 
-# 3. Get details of one uploaded CSV
+# 3. Dataset details
 @router.get("/dataset/{file_id}")
 def dataset_details(file_id: str):
 
@@ -113,81 +104,51 @@ def dataset_details(file_id: str):
         dataset = get_dataset(file_id)
 
         if not dataset:
-            raise HTTPException(
-                status_code=404,
-                detail="Dataset not found"
-            )
+            raise HTTPException(404, "Dataset not found")
 
         return dataset
 
     except PyMongoError:
-        raise HTTPException(
-            status_code=503,
-            detail="Unable to retrieve dataset from MongoDB"
-        )
+        raise HTTPException(503, "Unable to retrieve dataset from MongoDB")
 
 
-# 4. View upload history
+# 4. Upload history
 @router.get("/history")
 def upload_history():
 
     try:
-        return {
-            "history": get_history()
-        }
+        return {"history": get_history()}
 
     except PyMongoError:
-        raise HTTPException(
-            status_code=503,
-            detail="Unable to retrieve upload history"
-        )
+        raise HTTPException(503, "Unable to retrieve upload history")
 
 
-# 5. Analyze uploaded CSV
+# 5. Data analysis
 @router.get("/analysis/{file_id}")
 def analyze_dataset(file_id: str):
 
     try:
-        # Check dataset in MongoDB
         dataset = get_dataset(file_id)
 
         if not dataset:
-            raise HTTPException(
-                status_code=404,
-                detail="Dataset not found"
-            )
+            raise HTTPException(404, "Dataset not found")
 
-        # Get uploaded CSV file
         file_path = get_uploaded_file(file_id)
 
-        # Read CSV
         df = read_csv_file(file_path.read_bytes())
 
-        # Validate dataset
         validation = validate_data(df)
 
         if not validation["is_valid"]:
-            raise HTTPException(
-                status_code=400,
-                detail=validation["errors"]
-            )
+            raise HTTPException(400, validation["errors"])
 
-        # Perform basic analysis
         analysis = analyze_csv(str(file_path))
 
         if "error" in analysis:
-            raise HTTPException(
-                status_code=400,
-                detail=analysis["error"]
-            )
+            raise HTTPException(400, analysis["error"])
 
-        # Detect missing values
         missing = detect_missing_values(df)
-
-        # Detect duplicate records
         duplicates = detect_duplicates(df)
-
-        # Detect outliers
         outliers = detect_outliers(df)
 
         return {
@@ -201,13 +162,125 @@ def analyze_dataset(file_id: str):
         }
 
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail="Uploaded CSV file not found"
+        raise HTTPException(404, "Uploaded CSV file not found")
+
+    except PyMongoError:
+        raise HTTPException(503, "Database error")
+
+
+# 6. Cleaning recommendations - Member 3
+@router.get("/recommendations/{file_id}")
+def cleaning_recommendations(file_id: str):
+
+    try:
+        dataset = get_dataset(file_id)
+
+        if not dataset:
+            raise HTTPException(404, "Dataset not found")
+
+        file_path = get_uploaded_file(file_id)
+
+        df = read_csv_file(file_path.read_bytes())
+
+        recommendations = generate_recommendations(df)
+
+        return {
+            "file_id": file_id,
+            "recommendations": recommendations
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(404, "Uploaded CSV file not found")
+
+    except PyMongoError:
+        raise HTTPException(503, "Database error")
+
+
+# 7. Clean CSV - Member 3 integration
+@router.post("/clean/{file_id}")
+def clean_dataset(
+    file_id: str,
+    remove_dups: bool = True,
+    missing_method: str = None,
+    text_case: str = "none"
+):
+
+    try:
+        dataset = get_dataset(file_id)
+
+        if not dataset:
+            raise HTTPException(404, "Dataset not found")
+
+        if missing_method not in [None, "mean", "median"]:
+            raise HTTPException(
+                400,
+                "missing_method must be mean or median"
+            )
+
+        if text_case not in ["none", "lower", "upper", "title"]:
+            raise HTTPException(400, "Invalid text formatting option")
+
+        file_path = get_uploaded_file(file_id)
+
+        df = read_csv_file(file_path.read_bytes())
+
+        cleaned_df, report = clean_data(
+            df,
+            remove_dups=remove_dups,
+            missing_method=missing_method,
+            text_case=text_case
+        )
+
+        output_path = CLEANED_DIR / f"{file_id}_cleaned.csv"
+
+        save_cleaned_csv(cleaned_df, output_path)
+
+        update_cleaned_file(file_id, output_path)
+
+        return {
+            "message": "CSV cleaned successfully",
+            "file_id": file_id,
+            "original_rows": len(df),
+            "cleaned_rows": len(cleaned_df),
+            "columns": len(cleaned_df.columns),
+            "cleaning_report": report,
+            "download_endpoint": f"/download/{file_id}"
+        }
+
+    except FileNotFoundError:
+        raise HTTPException(404, "Uploaded CSV file not found")
+
+    except ValueError as error:
+        raise HTTPException(400, str(error))
+
+    except PyMongoError:
+        raise HTTPException(503, "Database error")
+
+
+# 8. Download cleaned CSV
+@router.get("/download/{file_id}")
+def download_cleaned_csv(file_id: str):
+
+    try:
+        dataset = get_dataset(file_id)
+
+        if not dataset:
+            raise HTTPException(404, "Dataset not found")
+
+        cleaned_path = dataset.get("cleaned_path")
+
+        if not cleaned_path or not Path(cleaned_path).is_file():
+            raise HTTPException(404, "Cleaned CSV file not found")
+
+        filename = (
+            Path(dataset["filename"]).stem + "_cleaned.csv"
+        )
+
+        return FileResponse(
+            path=cleaned_path,
+            media_type="text/csv",
+            filename=filename
         )
 
     except PyMongoError:
-        raise HTTPException(
-            status_code=503,
-            detail="Database error"
-        )
+        raise HTTPException(503, "Database error")
