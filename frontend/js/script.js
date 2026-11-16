@@ -1,39 +1,7 @@
 
-function previewCleaning() {
+const API_URL = "http://127.0.0.1:8000";
 
-    const operations = [];
-
-    if (document.getElementById("duplicates").checked)
-        operations.push("Remove Duplicate Rows");
-
-    if (document.getElementById("missing").checked)
-        operations.push("Handle Missing Values");
-
-    if (document.getElementById("spaces").checked)
-        operations.push("Remove Extra Spaces");
-
-    if (document.getElementById("format").checked)
-        operations.push("Standardize Text Formatting");
-
-    if (document.getElementById("types").checked)
-        operations.push("Convert Data Types");
-
-    const message = document.getElementById("cleanMessage");
-    const preview = document.getElementById("previewMessage");
-
-    if (operations.length === 0) {
-        message.textContent = "Please select at least one operation.";
-        preview.textContent = "No cleaning operations selected.";
-        return;
-    }
-
-    message.textContent = "Selected operations: " + operations.length;
-
-    preview.innerHTML = operations
-        .map(operation => "✓ " + operation)
-        .join("<br>");
-}
-
+// CSV Upload
 const fileInput = document.getElementById("csvFile");
 
 if (fileInput) {
@@ -45,8 +13,8 @@ if (fileInput) {
     });
 }
 
-function uploadCSV() {
-    const file = fileInput.files[0];
+async function uploadCSV() {
+    const file = fileInput?.files[0];
     const message = document.getElementById("message");
 
     if (!file) {
@@ -61,6 +29,75 @@ function uploadCSV() {
         return;
     }
 
-    message.textContent = "CSV file selected successfully!";
-    message.style.color = "green";
+    const formData = new FormData();
+    formData.append("file", file);
+
+    message.textContent = "Uploading your CSV...";
+    message.style.color = "blue";
+
+    try {
+        const response = await fetch(`${API_URL}/upload`, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Upload failed");
+        }
+
+        sessionStorage.setItem("cleancsv_file_id", data.file_id);
+
+        message.style.color = "green";
+        message.innerHTML = `
+            <strong>${data.message}</strong><br>
+            File: ${data.filename}<br>
+            Rows: ${data.rows}<br>
+            Columns: ${data.columns}<br>
+            File ID: ${data.file_id}
+        `;
+
+    } catch (error) {
+        message.textContent = "Error: " + error.message;
+        message.style.color = "red";
+    }
+}
+
+
+// Cleaning option selection preview
+function previewCleaning() {
+    const operations = [];
+
+    const options = [
+        ["duplicates", "Remove Duplicate Rows"],
+        ["missing", "Handle Missing Values"],
+        ["spaces", "Remove Extra Spaces"],
+        ["format", "Standardize Text Formatting"],
+        ["types", "Convert Data Types"]
+    ];
+
+    options.forEach(([id, name]) => {
+        const checkbox = document.getElementById(id);
+
+        if (checkbox && checkbox.checked) {
+            operations.push(name);
+        }
+    });
+
+    const message = document.getElementById("cleanMessage");
+    const preview = document.getElementById("previewMessage");
+
+    if (operations.length === 0) {
+        message.textContent = "Please select at least one operation.";
+        preview.textContent = "No operations selected.";
+        return;
+    }
+
+    message.textContent =
+        "Selected operations: " + operations.length;
+
+    preview.innerHTML = operations
+        .map(operation => "✓ " + operation)
+        .join("<br>");
 }
