@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Dashboard | CleanCSV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+    <h2>CleanCSV</h2>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="analysis.html">Dashboard</a>
+        <a href="history.html">History</a>
+    </div>
+</nav>
+
+<section class="dashboard">
+
+    <h1>Data Analysis Dashboard</h1>
+    <p>Overview of your uploaded dataset</p>
+
+    <h3 id="datasetName">Loading dataset...</h3>
+
+    <p id="dashboardMessage">Fetching analysis results...</p>
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>Total Rows</h3>
+            <h2 id="totalRows">--</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Columns</h3>
+            <h2 id="totalColumns">--</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Missing Values</h3>
+            <h2 id="missingValues">--</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>Duplicate Rows</h3>
+            <h2 id="duplicateRows">--</h2>
+        </div>
+
+    </div>
+
+    <div class="issues">
+
+        <h2>Detected Data Issues</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Issue</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+
+            <tbody id="issuesTableBody">
+                <tr>
+                    <td colspan="3">Loading analysis...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Dataset Columns</h2>
+        <ul id="columnList"></ul>
+
+        <a href="cleaning.html" class="btn">
+            Clean My Data
+        </a>
+
+    </div>
+
+</section>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleaning History | CleanCSV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav>
+    <h2>CleanCSV</h2>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="analysis.html">Dashboard</a>
+        <a href="history.html">History</a>
+    </div>
+</nav>
+
+<section class="dashboard">
+
+    <h1>CSV Upload History</h1>
+    <p>View all your previously uploaded datasets.</p>
+
+    <div class="issues">
+        <h2>Uploaded Files</h2>
+
+        <p id="historyMessage">Loading history...</p>
+
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Rows</th>
+                        <th>Columns</th>
+                        <th>Upload Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="historyTable">
+                </tbody>
+            </table>
+        </div>
+
+        <br>
+
+        <a href="upload.html" class="btn">
+            Upload New File
+        </a>
+
+    </div>
+
+</section>
+
+<script>
+const API_URL = "http://127.0.0.1:8000";
+
+async function loadHistory() {
+
+    const message = document.getElementById("historyMessage");
+    const table = document.getElementById("historyTable");
+
+    try {
+
+        const response = await fetch(`${API_URL}/history`);
+
+        if (!response.ok) {
+            throw new Error("Unable to retrieve history");
+        }
+
+        const data = await response.json();
+
+        table.innerHTML = "";
+
+        if (!data.history || data.history.length === 0) {
+            message.textContent = "No uploaded files found.";
+            return;
+        }
+
+        message.textContent =
+            `Total uploaded files: ${data.history.length}`;
+
+        data.history.forEach(file => {
+
+            const row = document.createElement("tr");
+
+            const values = [
+                file.filename || "Unknown",
+                file.rows ?? "-",
+                file.columns ?? "-",
+                file.uploaded_at
+                    ? new Date(file.uploaded_at).toLocaleString()
+                    : "-",
+                file.cleaned_path ? "Cleaned" : "Uploaded"
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            table.appendChild(row);
+
+        });
+
+    } catch (error) {
+
+        message.textContent =
+            "Error loading history: " + error.message;
+
+    }
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>
