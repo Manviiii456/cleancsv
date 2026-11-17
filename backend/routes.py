@@ -1,4 +1,7 @@
 
+import math
+import numpy as np
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -39,6 +42,28 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 CLEANED_DIR = BASE_DIR / "storage" / "cleaned"
 CLEANED_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# Convert NaN and infinity into JSON-safe values
+def clean_for_json(value):
+
+    if isinstance(value, dict):
+        return {
+            key: clean_for_json(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, (list, tuple)):
+        return [clean_for_json(item) for item in value]
+
+    if isinstance(value, np.generic):
+        value = value.item()
+
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return None
+
+    return value
 
 
 # 1. Health check
@@ -151,7 +176,7 @@ def analyze_dataset(file_id: str):
         duplicates = detect_duplicates(df)
         outliers = detect_outliers(df)
 
-        return {
+        result = {
             "file_id": file_id,
             "filename": dataset["filename"],
             "validation": validation,
@@ -160,6 +185,8 @@ def analyze_dataset(file_id: str):
             "duplicates": duplicates,
             "outliers": outliers
         }
+
+        return clean_for_json(result)
 
     except FileNotFoundError:
         raise HTTPException(404, "Uploaded CSV file not found")
@@ -237,7 +264,7 @@ def clean_dataset(
 
         update_cleaned_file(file_id, output_path)
 
-        return {
+        return clean_for_json({
             "message": "CSV cleaned successfully",
             "file_id": file_id,
             "original_rows": len(df),
@@ -245,7 +272,7 @@ def clean_dataset(
             "columns": len(cleaned_df.columns),
             "cleaning_report": report,
             "download_endpoint": f"/download/{file_id}"
-        }
+        })
 
     except FileNotFoundError:
         raise HTTPException(404, "Uploaded CSV file not found")

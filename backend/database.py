@@ -16,12 +16,9 @@ client = MongoClient(
 
 # Database
 db = client["cleancsv"]
-
-# Collection
 datasets_collection = db["datasets"]
 
 
-# Check MongoDB connection
 def initialize_database():
     try:
         client.admin.command("ping")
@@ -38,9 +35,7 @@ def initialize_database():
         raise
 
 
-# Save uploaded CSV details
 def add_dataset(file_id, filename, original_path, rows, columns):
-
     dataset = {
         "file_id": file_id,
         "filename": filename,
@@ -55,18 +50,14 @@ def add_dataset(file_id, filename, original_path, rows, columns):
     datasets_collection.insert_one(dataset)
 
 
-# Get one uploaded dataset
 def get_dataset(file_id):
-
     return datasets_collection.find_one(
         {"file_id": file_id},
         {"_id": 0}
     )
 
 
-# Update cleaned CSV details
 def update_cleaned_file(file_id, cleaned_path):
-
     datasets_collection.update_one(
         {"file_id": file_id},
         {
@@ -78,9 +69,7 @@ def update_cleaned_file(file_id, cleaned_path):
     )
 
 
-# Get upload history
 def get_history():
-
     return list(
         datasets_collection.find(
             {},

@@ -11,23 +11,22 @@ body {
     color: #1e293b;
 }
 
+/* Navigation */
 nav {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 22px 8%;
     background: white;
 }
 
-nav h2 {
-    color: #2563eb;
-}
-
 nav a {
     text-decoration: none;
-    color: #334155;
+    color: #1e3a8a;
     margin-left: 20px;
 }
 
+/* Home Page */
 .hero {
     text-align: center;
     padding: 110px 20px;
@@ -35,53 +34,58 @@ nav a {
 }
 
 .hero h1 {
-    font-size: 45px;
-    color: #1e3a8a;
+    font-size: 42px;
+    margin-bottom: 20px;
 }
 
 .hero p {
-    margin: 25px;
+    font-size: 18px;
+    margin-bottom: 25px;
 }
 
 .btn {
     display: inline-block;
+    padding: 13px 25px;
     background: #2563eb;
     color: white;
-    padding: 14px 30px;
+    border: none;
+    border-radius: 6px;
     text-decoration: none;
-    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn:hover {
+    background: #1d4ed8;
 }
 
 .features {
     display: flex;
+    justify-content: center;
     gap: 25px;
-    padding: 60px 8%;
+    padding: 50px 8%;
 }
 
-.card {
-    flex: 1;
+.feature-card {
     background: white;
-    padding: 35px;
+    padding: 30px;
+    border-radius: 10px;
     text-align: center;
-    border-radius: 12px;
+    flex: 1;
 }
 
-.card h3 {
-    color: #2563eb;
-    margin-bottom: 15px;
-}
-
+/* Footer */
 footer {
     text-align: center;
     padding: 25px;
 }
 
+/* Dashboard */
 .dashboard {
     padding: 50px 8%;
 }
 
 .dashboard h1 {
-    color: #1e3a8a;
     margin-bottom: 10px;
 }
 
@@ -94,39 +98,34 @@ footer {
 
 .stat-card {
     background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px #00000010;
-}
-
-.stat-card h3 {
-    color: #64748b;
-    font-size: 16px;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
 }
 
 .stat-card h2 {
-    color: #2563eb;
-    font-size: 32px;
     margin-top: 15px;
+    color: #2563eb;
 }
 
 .issues {
     background: white;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 10px;
     margin-top: 25px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 25px 0;
+    margin-top: 20px;
 }
 
-th, td {
+th,
+td {
     padding: 15px;
-    text-align: left;
     border-bottom: 1px solid #ddd;
+    text-align: left;
 }
 
 th {
@@ -134,12 +133,29 @@ th {
     color: #1e3a8a;
 }
 
-@media (max-width: 700px) {
-    .stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* Upload Page */
+.upload-section {
+    text-align: center;
+    padding: 80px 20px;
 }
 
+.upload-box {
+    background: white;
+    max-width: 650px;
+    margin: 30px auto;
+    padding: 40px;
+    border-radius: 12px;
+}
+
+input[type="file"] {
+    margin: 25px 0;
+}
+
+#message {
+    margin-top: 20px;
+}
+
+/* Cleaning Options */
 .clean-option {
     display: block;
     padding: 18px;
@@ -154,46 +170,74 @@ th {
     accent-color: #2563eb;
 }
 
+/* Cleaning Options - Vertical Layout */
+.cleaning-options {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 12px;
+    margin: 25px 0;
+    width: 100%;
+}
+
+.cleaning-options .clean-option {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    width: 100%;
+    padding: 15px !important;
+    margin: 0 !important;
+    background: #f4f7fc;
+    border-radius: 8px;
+    text-align: left !important;
+    cursor: pointer;
+}
+
+.cleaning-options .clean-option input[type="checkbox"] {
+    display: block !important;
+    width: 17px !important;
+    height: 17px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 0 0 17px !important;
+    accent-color: #2563eb;
+}
+
+.cleaning-options .clean-option span {
+    display: inline-block;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Messages */
 #cleanMessage,
 #previewMessage {
     margin-top: 20px;
     color: #2563eb;
 }
 
-.upload-section {
-    text-align: center;
-    padding: 80px 20px;
+/* Responsive Design */
+@media (max-width: 700px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav a {
+        margin: 0 8px;
+    }
+
+    .features {
+        flex-direction: column;
+    }
+
+    .upload-box {
+        padding: 25px;
+    }
 }
-
-.upload-section h1 {
-    color: #1e3a8a;
-    font-size: 36px;
-    margin-bottom: 15px;
-}
-
-.upload-box {
-    background: white;
-    max-width: 550px;
-    margin: 40px auto;
-    padding: 45px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px #00000010;
-}
-
-.upload-box input {
-    margin: 25px 0;
-    display: block;
-    width: 100%;
-}
-
-.upload-box button {
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#message {
-    margin-top: 20px;
-}
-
-
