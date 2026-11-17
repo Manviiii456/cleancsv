@@ -20,13 +20,9 @@ nav {
     background: white;
 }
 
-nav h2 {
-    color: #2563eb;
-}
-
 nav a {
     text-decoration: none;
-    color: #334155;
+    color: #1e3a8a;
     margin-left: 20px;
 }
 
@@ -38,42 +34,47 @@ nav a {
 }
 
 .hero h1 {
-    font-size: 45px;
-    color: #1e3a8a;
+    font-size: 42px;
+    margin-bottom: 20px;
 }
 
 .hero p {
-    margin: 25px;
+    font-size: 18px;
+    margin-bottom: 25px;
 }
 
 .btn {
     display: inline-block;
+    padding: 13px 25px;
     background: #2563eb;
     color: white;
-    padding: 14px 30px;
+    border: none;
+    border-radius: 6px;
     text-decoration: none;
-    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn:hover {
+    background: #1d4ed8;
 }
 
 .features {
     display: flex;
+    justify-content: center;
     gap: 25px;
-    padding: 60px 8%;
+    padding: 50px 8%;
 }
 
-.card {
-    flex: 1;
+.feature-card {
     background: white;
-    padding: 35px;
+    padding: 30px;
+    border-radius: 10px;
     text-align: center;
-    border-radius: 12px;
+    flex: 1;
 }
 
-.card h3 {
-    color: #2563eb;
-    margin-bottom: 15px;
-}
-
+/* Footer */
 footer {
     text-align: center;
     padding: 25px;
@@ -85,7 +86,6 @@ footer {
 }
 
 .dashboard h1 {
-    color: #1e3a8a;
     margin-bottom: 10px;
 }
 
@@ -98,39 +98,34 @@ footer {
 
 .stat-card {
     background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px #00000010;
-}
-
-.stat-card h3 {
-    color: #64748b;
-    font-size: 16px;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
 }
 
 .stat-card h2 {
-    color: #2563eb;
-    font-size: 32px;
     margin-top: 15px;
+    color: #2563eb;
 }
 
 .issues {
     background: white;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: 10px;
     margin-top: 25px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 25px 0;
+    margin-top: 20px;
 }
 
-th, td {
+th,
+td {
     padding: 15px;
-    text-align: left;
     border-bottom: 1px solid #ddd;
+    text-align: left;
 }
 
 th {
@@ -144,31 +139,20 @@ th {
     padding: 80px 20px;
 }
 
-.upload-section h1 {
-    color: #1e3a8a;
-    font-size: 36px;
-    margin-bottom: 15px;
-}
-
 .upload-box {
     background: white;
-    max-width: 550px;
-    margin: 40px auto;
-    padding: 45px;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px #00000010;
+    max-width: 650px;
+    margin: 30px auto;
+    padding: 40px;
+    border-radius: 12px;
 }
 
-.upload-box input {
+input[type="file"] {
     margin: 25px 0;
-    display: block;
-    width: 100%;
 }
 
-.upload-box button {
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+#message {
+    margin-top: 20px;
 }
 
 /* Cleaning Options */
@@ -188,83 +172,12 @@ th {
 
 /* Cleaning Options - Vertical Layout */
 .cleaning-options {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-    margin: 25px 0;
-    width: 100%;
-}
-
-/* Checkbox and Text Alignment */
-.cleaning-options label {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start;
-    gap: 12px;
-    width: 100%;
-    padding: 14px 18px;
-    margin: 0;
-    background: #f4f7fc;
-    border-radius: 8px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.cleaning-options label input[type="checkbox"] {
-    display: inline-block !important;
-    width: 16px;
-    height: 16px;
-    margin: 0 !important;
-    padding: 0;
-    flex-shrink: 0;
-    accent-color: #2563eb;
-}
-
-/* Messages */
-#cleanMessage,
-#previewMessage {
-    margin-top: 20px;
-    color: #2563eb;
-}
-
-#message {
-    margin-top: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 700px) {
-    .stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    nav {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    nav a {
-        margin: 0 8px;
-    }
-
-    .features {
-        flex-direction: column;
-    }
-
-    .upload-box {
-        padding: 25px;
-    }
-}
-
-/* Cleaning Options Layout */
-
-.cleaning-options {
     display: flex !important;
     flex-direction: column !important;
-    gap: 12px !important;
-    width: 100%;
+    align-items: stretch;
+    gap: 12px;
     margin: 25px 0;
+    width: 100%;
 }
 
 .cleaning-options .clean-option {
@@ -296,4 +209,35 @@ th {
     display: inline-block;
     margin: 0;
     line-height: 1.4;
+}
+
+/* Messages */
+#cleanMessage,
+#previewMessage {
+    margin-top: 20px;
+    color: #2563eb;
+}
+
+/* Responsive Design */
+@media (max-width: 700px) {
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav a {
+        margin: 0 8px;
+    }
+
+    .features {
+        flex-direction: column;
+    }
+
+    .upload-box {
+        padding: 25px;
+    }
 }

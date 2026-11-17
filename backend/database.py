@@ -20,9 +20,19 @@ datasets_collection = db["datasets"]
 
 
 def initialize_database():
-    client.admin.command("ping")
-    datasets_collection.create_index("file_id", unique=True)
-    print("MongoDB connected successfully!")
+    try:
+        client.admin.command("ping")
+
+        datasets_collection.create_index(
+            "file_id",
+            unique=True
+        )
+
+        print("MongoDB connected successfully!")
+
+    except Exception as error:
+        print(f"MongoDB connection failed: {error}")
+        raise
 
 
 def add_dataset(file_id, filename, original_path, rows, columns):
@@ -66,3 +76,4 @@ def get_history():
             {"_id": 0}
         ).sort("uploaded_at", -1)
     )
+
