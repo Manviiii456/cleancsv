@@ -23,14 +23,19 @@ datasets_collection = db["datasets"]
 
 # Check MongoDB connection
 def initialize_database():
-    client.admin.command("ping")
+    try:
+        client.admin.command("ping")
 
-    datasets_collection.create_index(
-        "file_id",
-        unique=True
-    )
+        datasets_collection.create_index(
+            "file_id",
+            unique=True
+        )
 
-    print("MongoDB connected successfully!")
+        print("MongoDB connected successfully!")
+
+    except Exception as error:
+        print(f"MongoDB connection failed: {error}")
+        raise
 
 
 # Save uploaded CSV details
@@ -82,3 +87,4 @@ def get_history():
             {"_id": 0}
         ).sort("uploaded_at", -1)
     )
+
