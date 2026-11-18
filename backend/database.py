@@ -16,15 +16,26 @@ client = MongoClient(
 
 # Database
 db = client["cleancsv"]
+
+# Collections
 datasets_collection = db["datasets"]
+users_collection = db["users"]
 
 
+# Initialize MongoDB
 def initialize_database():
     try:
         client.admin.command("ping")
 
+        # Dataset unique index
         datasets_collection.create_index(
             "file_id",
+            unique=True
+        )
+
+        # User email unique index
+        users_collection.create_index(
+            "email",
             unique=True
         )
 
@@ -35,7 +46,12 @@ def initialize_database():
         raise
 
 
+# -------------------------------
+# EXISTING DATASET FUNCTIONS
+# -------------------------------
+
 def add_dataset(file_id, filename, original_path, rows, columns):
+
     dataset = {
         "file_id": file_id,
         "filename": filename,
@@ -51,6 +67,7 @@ def add_dataset(file_id, filename, original_path, rows, columns):
 
 
 def get_dataset(file_id):
+
     return datasets_collection.find_one(
         {"file_id": file_id},
         {"_id": 0}
@@ -58,6 +75,7 @@ def get_dataset(file_id):
 
 
 def update_cleaned_file(file_id, cleaned_path):
+
     datasets_collection.update_one(
         {"file_id": file_id},
         {
@@ -70,6 +88,7 @@ def update_cleaned_file(file_id, cleaned_path):
 
 
 def get_history():
+
     return list(
         datasets_collection.find(
             {},
@@ -77,3 +96,26 @@ def get_history():
         ).sort("uploaded_at", -1)
     )
 
+
+# -------------------------------
+# NEW USER AUTHENTICATION FUNCTIONS
+# -------------------------------
+
+# Register a new user
+def add_user(email, hashed_password):
+
+    user = {
+        "email": email,
+        "hashed_password": hashed_password,
+        "created_at": datetime.now()
+    }
+
+    return users_collection.insert_one(user)
+
+
+# Find user using email
+def get_user_by_email(email):
+
+    return users_collection.find_one(
+        {"email": email}
+    )

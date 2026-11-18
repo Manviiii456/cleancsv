@@ -3,13 +3,55 @@ const API_URL = "http://127.0.0.1:8000";
 
 
 // =====================================
+// 0. JWT AUTHENTICATION
+// =====================================
+
+async function authenticatedFetch(url, options = {}) {
+
+    const token = sessionStorage.getItem("cleancsv_token");
+
+    if (!token) {
+        sessionStorage.removeItem("cleancsv_logged_in");
+        window.location.href = "login.html";
+        throw new Error("Please login first.");
+    }
+
+    const headers = {
+        ...options.headers,
+        "Authorization": `Bearer ${token}`
+    };
+
+    const response = await fetch(url, {
+        ...options,
+        headers: headers
+    });
+
+    if (response.status === 401) {
+
+        sessionStorage.removeItem("cleancsv_token");
+        sessionStorage.removeItem("cleancsv_logged_in");
+
+        alert("Your session has expired. Please login again.");
+
+        window.location.href = "login.html";
+
+        throw new Error("Session expired. Please login again.");
+    }
+
+    return response;
+}
+
+
+// =====================================
 // 1. CSV UPLOAD
 // =====================================
 
 const fileInput = document.getElementById("csvFile");
 
 if (fileInput) {
+
     fileInput.addEventListener("change", function () {
+
         const file = this.files[0];
         const fileName = document.getElementById("fileName");
 
@@ -18,7 +60,9 @@ if (fileInput) {
                 ? file.name
                 : "No file selected";
         }
+
     });
+
 }
 
 
@@ -47,10 +91,13 @@ async function uploadCSV() {
 
     try {
 
-        const response = await fetch(`${API_URL}/upload`, {
-            method: "POST",
-            body: formData
-        });
+        const response = await authenticatedFetch(
+            `${API_URL}/upload`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
 
         const data = await response.json();
 
@@ -63,6 +110,9 @@ async function uploadCSV() {
         }
 
         sessionStorage.setItem("cleancsv_file_id", data.file_id);
+
+        // Clear previous cleaned file information
+        sessionStorage.removeItem("cleancsv_cleaned_file_id");
 
         message.style.color = "green";
 
@@ -78,7 +128,10 @@ async function uploadCSV() {
         message.textContent = "Error: " + error.message;
         message.style.color = "red";
 
+        console.error("Upload Error:", error);
+
     }
+
 }
 
 
@@ -183,7 +236,7 @@ async function loadDashboard() {
 
     try {
 
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `${API_URL}/analysis/${encodeURIComponent(fileId)}`
         );
 
@@ -346,7 +399,11 @@ async function cleanCSV() {
 
     const status = document.getElementById("cleanStatus");
     const cleanButton = document.getElementById("cleanButton");
-    const downloadButton = document.getElementById("downloadButton");
+
+    if (!status || !cleanButton) {
+        console.error("Cleaning page elements not found.");
+        return;
+    }
 
     if (!fileId) {
         status.textContent = "Please upload a CSV file first.";
@@ -372,6 +429,7 @@ async function cleanCSV() {
         !standardizeText &&
         !removeSpaces
     ) {
+
         status.textContent =
             "Please select at least one supported cleaning operation.";
 
@@ -383,22 +441,23 @@ async function cleanCSV() {
 
     params.append("remove_dups", removeDuplicates);
 
-    // Send missing_method only when missing-value handling is selected.
     if (handleMissing) {
         params.append("missing_method", "mean");
     }
 
     params.append("text_case", standardizeText ? "title" : "none");
 
+    // Clear previous cleaned file ID before starting a new cleaning
+    sessionStorage.removeItem("cleancsv_cleaned_file_id");
+
     cleanButton.disabled = true;
-    downloadButton.disabled = true;
 
     status.textContent = "Cleaning your CSV file...";
     status.style.color = "blue";
 
     try {
 
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `${API_URL}/clean/${encodeURIComponent(fileId)}?${params.toString()}`,
             {
                 method: "POST"
@@ -415,6 +474,7 @@ async function cleanCSV() {
             );
         }
 
+        // Save the cleaned file ID after successful cleaning
         sessionStorage.setItem(
             "cleancsv_cleaned_file_id",
             fileId
@@ -427,12 +487,15 @@ async function cleanCSV() {
 
         status.style.color = "green";
 
-        downloadButton.disabled = false;
+        console.log("CSV cleaning successful.");
+        console.log("Cleaned File ID:", fileId);
 
     } catch (error) {
 
         status.textContent = "Error: " + error.message;
         status.style.color = "red";
+
+        console.error("Cleaning Error:", error);
 
     } finally {
 
@@ -453,9 +516,19 @@ async function downloadCSV() {
 
     const status = document.getElementById("cleanStatus");
 
+    if (!status) {
+        console.error("Cleaning status element not found.");
+        return;
+    }
+
+    // Check whether cleaning was completed
     if (!fileId) {
-        status.textContent = "Please clean your CSV file first.";
+
+        status.textContent =
+            "Please clean your CSV file first.";
+
         status.style.color = "red";
+
         return;
     }
 
@@ -464,21 +537,32 @@ async function downloadCSV() {
 
     try {
 
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `${API_URL}/download/${encodeURIComponent(fileId)}`
         );
 
         if (!response.ok) {
-            const errorData = await response.json();
 
-            throw new Error(
-                typeof errorData.detail === "string"
-                    ? errorData.detail
-                    : "Download failed"
-            );
+            let errorMessage = "Download failed.";
+
+            try {
+                const errorData = await response.json();
+                errorMessage =
+                    typeof errorData.detail === "string"
+                        ? errorData.detail
+                        : JSON.stringify(errorData.detail || errorMessage);
+            } catch (parseError) {
+                console.error("Could not read download error response.");
+            }
+
+            throw new Error(errorMessage);
         }
 
         const blob = await response.blob();
+
+        if (blob.size === 0) {
+            throw new Error("The downloaded file is empty.");
+        }
 
         const downloadUrl = window.URL.createObjectURL(blob);
 
@@ -488,19 +572,31 @@ async function downloadCSV() {
         link.download = "cleaned_" + fileId + ".csv";
 
         document.body.appendChild(link);
+
         link.click();
 
         link.remove();
 
-        window.URL.revokeObjectURL(downloadUrl);
+        // Release the temporary download URL
+        setTimeout(() => {
+            window.URL.revokeObjectURL(downloadUrl);
+        }, 1000);
 
-        status.textContent = "Your cleaned CSV has been downloaded!";
+        status.textContent =
+            "Your cleaned CSV has been downloaded!";
+
         status.style.color = "green";
+
+        console.log("CSV download started successfully.");
 
     } catch (error) {
 
-        status.textContent = "Download error: " + error.message;
+        status.textContent =
+            "Download error: " + error.message;
+
         status.style.color = "red";
+
+        console.error("Download Error:", error);
 
     }
 

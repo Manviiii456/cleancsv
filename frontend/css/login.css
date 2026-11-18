@@ -1,0 +1,213 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    width: 850px;
+    min-height: 500px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px #3335;
+}
+
+/* LEFT SIDE */
+
+.monkey {
+    width: 42%;
+    background: #e6eaff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.face {
+    font-size: 130px;
+    animation: bounce 2s infinite;
+    position: relative;
+    z-index: 1;
+}
+
+/* BOTH HANDS */
+
+.hand {
+    font-size: 60px;
+    position: absolute;
+    top: 42%;
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+        transform 0.55s ease,
+        opacity 0.3s ease;
+
+}
+
+/* Left hand - normal position */
+
+.hand-left {
+    left: 7%;
+    transform: translate(0, 75px) rotate(-35deg);
+}
+
+/* Right hand - normal position */
+
+.hand-right {
+    right: 7%;
+    transform: translate(0, 75px) rotate(35deg);
+}
+
+/* When password is selected, cover both eyes */
+
+.monkey.hide .hand-left {
+    opacity: 1;
+    transform: translate(85px, 0) rotate(-8deg);
+}
+
+.monkey.hide .hand-right {
+    opacity: 1;
+    transform: translate(-85px, 0) rotate(8deg);
+}
+
+/* Monkey animation */
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.monkey p {
+    font-size: 20px;
+    color: #555;
+    margin-top: 20px;
+}
+
+/* RIGHT SIDE */
+
+.login {
+    width: 58%;
+    padding: 55px 40px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.subtitle {
+    color: gray;
+    margin-bottom: 30px;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 18px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 25px;
+}
+
+a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.signup {
+    margin-top: 25px;
+    font-size: 14px;
+}
+
+/* RESPONSIVE DESIGN */
+
+@media(max-width: 650px) {
+
+    .container {
+        width: 90%;
+        flex-direction: column;
+    }
+
+    .monkey,
+    .login {
+        width: 100%;
+    }
+
+    .monkey {
+        min-height: 200px;
+    }
+
+    .face {
+        font-size: 90px;
+    }
+
+    .hand {
+        font-size: 42px;
+        top: 40%;
+    }
+
+    .monkey.hide .hand-left {
+        transform: translate(55px, 0) rotate(-8deg);
+    }
+
+    .monkey.hide .hand-right {
+        transform: translate(-55px, 0) rotate(8deg);
+    }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+    .face {
+        animation: none;
+    }
+
+    .hand {
+        transition: none;
+    }
+}

@@ -1,9 +1,18 @@
 
 import math
+import os
+import jwt
 import numpy as np
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    HTTPException,
+    Depends
+)
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pathlib import Path
 from uuid import uuid4
 from pymongo.errors import PyMongoError
@@ -37,7 +46,49 @@ from backend.database import (
     update_cleaned_file
 )
 
+
 router = APIRouter()
+
+
+# JWT Authentication
+security = HTTPBearer()
+
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "cleancsv-demo-secret-change-before-deployment"
+)
+
+ALGORITHM = "HS256"
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    token = credentials.credentials
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        email = payload.get("sub")
+
+        if not email:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication token"
+            )
+
+        return email
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token"
+        )
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CLEANED_DIR = BASE_DIR / "storage" / "cleaned"
@@ -66,7 +117,7 @@ def clean_for_json(value):
     return value
 
 
-# 1. Health check
+# 1. Health check (public)
 @router.get("/health")
 def health_check():
     return {
@@ -75,9 +126,12 @@ def health_check():
     }
 
 
-# 2. Upload CSV
+# 2. Upload CSV (protected)
 @router.post("/upload")
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_csv(
+    file: UploadFile = File(...),
+    current_user: str = Depends(get_current_user)
+):
 
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(400, "Only CSV files are allowed")
@@ -121,9 +175,12 @@ async def upload_csv(file: UploadFile = File(...)):
         raise HTTPException(503, "Unable to save file details in MongoDB")
 
 
-# 3. Dataset details
+# 3. Dataset details (protected)
 @router.get("/dataset/{file_id}")
-def dataset_details(file_id: str):
+def dataset_details(
+    file_id: str,
+    current_user: str = Depends(get_current_user)
+):
 
     try:
         dataset = get_dataset(file_id)
@@ -137,9 +194,11 @@ def dataset_details(file_id: str):
         raise HTTPException(503, "Unable to retrieve dataset from MongoDB")
 
 
-# 4. Upload history
+# 4. Upload history (protected)
 @router.get("/history")
-def upload_history():
+def upload_history(
+    current_user: str = Depends(get_current_user)
+):
 
     try:
         return {"history": get_history()}
@@ -148,9 +207,12 @@ def upload_history():
         raise HTTPException(503, "Unable to retrieve upload history")
 
 
-# 5. Data analysis
+# 5. Data analysis (protected)
 @router.get("/analysis/{file_id}")
-def analyze_dataset(file_id: str):
+def analyze_dataset(
+    file_id: str,
+    current_user: str = Depends(get_current_user)
+):
 
     try:
         dataset = get_dataset(file_id)
@@ -195,9 +257,12 @@ def analyze_dataset(file_id: str):
         raise HTTPException(503, "Database error")
 
 
-# 6. Cleaning recommendations - Member 3
+# 6. Cleaning recommendations (protected)
 @router.get("/recommendations/{file_id}")
-def cleaning_recommendations(file_id: str):
+def cleaning_recommendations(
+    file_id: str,
+    current_user: str = Depends(get_current_user)
+):
 
     try:
         dataset = get_dataset(file_id)
@@ -223,13 +288,14 @@ def cleaning_recommendations(file_id: str):
         raise HTTPException(503, "Database error")
 
 
-# 7. Clean CSV - Member 3 integration
+# 7. Clean CSV (protected)
 @router.post("/clean/{file_id}")
 def clean_dataset(
     file_id: str,
     remove_dups: bool = True,
     missing_method: str = None,
-    text_case: str = "none"
+    text_case: str = "none",
+    current_user: str = Depends(get_current_user)
 ):
 
     try:
@@ -284,9 +350,12 @@ def clean_dataset(
         raise HTTPException(503, "Database error")
 
 
-# 8. Download cleaned CSV
+# 8. Download cleaned CSV (protected)
 @router.get("/download/{file_id}")
-def download_cleaned_csv(file_id: str):
+def download_cleaned_csv(
+    file_id: str,
+    current_user: str = Depends(get_current_user)
+):
 
     try:
         dataset = get_dataset(file_id)

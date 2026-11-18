@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routes import router
+from backend.auth.auth_routes import router as auth_router
 from backend.database import initialize_database
 
 
@@ -32,6 +33,7 @@ def startup_event():
 
 # Connect all API routes
 app.include_router(router)
+app.include_router(auth_router)
 
 
 # Home API
