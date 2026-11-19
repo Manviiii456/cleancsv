@@ -1,6 +1,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +13,16 @@
 
 <nav>
     <h2>CleanCSV</h2>
+
     <div>
         <a href="index.html">Home</a>
         <a href="upload.html">Upload</a>
         <a href="analysis.html">Dashboard</a>
         <a href="history.html">History</a>
+        <a href="#" id="logoutButton">Logout</a>
     </div>
 </nav>
+
 
 <section class="dashboard">
 
@@ -26,12 +30,15 @@
     <p>View all your previously uploaded datasets.</p>
 
     <div class="issues">
+
         <h2>Uploaded Files</h2>
 
         <p id="historyMessage">Loading history...</p>
 
         <div style="overflow-x:auto;">
+
             <table>
+
                 <thead>
                     <tr>
                         <th>File Name</th>
@@ -42,9 +49,10 @@
                     </tr>
                 </thead>
 
-                <tbody id="historyTable">
-                </tbody>
+                <tbody id="historyTable"></tbody>
+
             </table>
+
         </div>
 
         <br>
@@ -57,29 +65,73 @@
 
 </section>
 
+
 <script>
+
 const API_URL = "http://127.0.0.1:8000";
+
 
 async function loadHistory() {
 
     const message = document.getElementById("historyMessage");
     const table = document.getElementById("historyTable");
 
+    const token = sessionStorage.getItem("cleancsv_token");
+
+    // Check login token
+    if (!token) {
+
+        window.location.href = "login.html";
+        return;
+
+    }
+
+    message.textContent = "Loading history...";
+
     try {
 
-        const response = await fetch(`${API_URL}/history`);
+        // Send JWT authentication token
+        const response = await fetch(`${API_URL}/history`, {
 
-        if (!response.ok) {
-            throw new Error("Unable to retrieve history");
+            method: "GET",
+
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+
+        });
+
+        if (response.status === 401 || response.status === 403) {
+
+            sessionStorage.removeItem("cleancsv_token");
+            sessionStorage.removeItem("cleancsv_logged_in");
+
+            alert("Your session is invalid. Please login again.");
+
+            window.location.href = "login.html";
+            return;
+
         }
 
         const data = await response.json();
 
+        if (!response.ok) {
+
+            throw new Error(
+                typeof data.detail === "string"
+                    ? data.detail
+                    : "Unable to retrieve history"
+            );
+
+        }
+
         table.innerHTML = "";
 
         if (!data.history || data.history.length === 0) {
+
             message.textContent = "No uploaded files found.";
             return;
+
         }
 
         message.textContent =
@@ -100,9 +152,13 @@ async function loadHistory() {
             ];
 
             values.forEach(value => {
+
                 const cell = document.createElement("td");
+
                 cell.textContent = value;
+
                 row.appendChild(cell);
+
             });
 
             table.appendChild(row);
@@ -114,11 +170,18 @@ async function loadHistory() {
         message.textContent =
             "Error loading history: " + error.message;
 
+        console.error("History Error:", error);
+
     }
+
 }
 
+
 loadHistory();
+
 </script>
+
 <script src="js/auth.js"></script>
+
 </body>
 </html>
